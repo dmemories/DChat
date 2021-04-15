@@ -5,6 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DChat 1.0</title>
+    <link rel = "icon" href="/images/icon.png" type = "image/x-icon">
     <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet"/>
     <script src="/jquery/jquery.min.js"></script>
     <script src="/bootstrap/js/bootstrap.min.js"></script>
@@ -23,7 +24,9 @@
     </style>
 </head>
 <body style="background-color: #000;">
-
+    <audio id="notisound" controls style="display:none">
+        <source src="sounds/notification.wav" type="audio/mpeg">
+    </audio>
     <div class="container" style="margin-top: 50px;">
         <div class="row">
             <div class="col-9"><div class="content"></div></div>
@@ -40,28 +43,42 @@
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io.connect()
+        var mySocketId = -1;
+        socket.emit('initial', '')
+        socket.on('getSocketId', sid => {
+            if (mySocketId == -1) mySocketId = sid
+        })
 
         let contentEle = document.querySelector(".content")
         let memberEle = document.querySelector(".member")
         let msgEle = document.querySelector("#msg")
         let sendMsgBtn = document.querySelector("#sendMsgBtn")
         
-        sendMsgBtn.addEventListener('click', e => {
+        const sendMsg = (e) => {
             if (msgEle.value) {
                 socket.emit('sendMsg', msgEle.value)
                 msgEle.value = ''
             }
-        })
+        }
 
-        socket.on('getMsg', result => {
+        msgEle.addEventListener('keypress', (e) => {
+            if (event.keyCode === 13) {
+                event.preventDefault()
+                sendMsg()
+            }
+        })
+        sendMsgBtn.addEventListener('click', sendMsg)
+
+        socket.on('getMsg', (data) => {
+            console.log(data)
             let lastContent = contentEle.innerHTML
-            contentEle.innerHTML = (lastContent ? lastContent + "<br>" : "") + result
+            contentEle.innerHTML = (lastContent ? lastContent + "<br>" : "") + data.msg
+            contentEle.scrollTop = contentEle.scrollHeight;
+            if (data.senderSid != -1 && data.senderSid != mySocketId) document.getElementById("notisound").play();
         })
         socket.on('getOnlineUser', result => {
             document.querySelector(".member").innerHTML = result
         })
-
-        
 
 
         // Change Username
@@ -76,18 +93,12 @@
             allowOutsideClick: () => !Swal.isLoading()
             }).then((result) => {
             if (result.isConfirmed) {
-                /* $("#bookDate").prop('disabled', true);
-                $("#timeContent").prop('disabled', true);
-                $("#btn_confirm").prop('disabled', true);
-                $("#bookedContent").html("");
-                
-                */
                 socket.emit('changeUsername', result.value.xxx)
             }
             else {
                 socket.emit('changeUsername', "")
-               
             }
+            msgEle.focus()
         })
 
 
