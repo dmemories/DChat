@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DChat 1.0</title>
+    <link href="/bootstrap/css/bootstrap.min.css" rel="stylesheet"/>
+    <script src="/jquery/jquery.min.js"></script>
+    <script src="/bootstrap/js/bootstrap.min.js"></script>
+    <style>
+        .content {
+            height: 500px;
+            overflow: auto;
+            background: #fff;
+        }
+        .member {
+            height: 100%;
+            overflow: auto;
+            background: #fff;
+        }
+        .username { font-weight: bold; }
+    </style>
+</head>
+<body style="background-color: #000;">
+
+    <div class="container" style="margin-top: 50px;">
+        <div class="row">
+            <div class="col-9"><div class="content"></div></div>
+            <div class="col"><div class="member"></div></div>
+        </div>
+        <div class="row">
+            <div class="col-9" style="margin-top: 20px;"><input id="msg" style="width: 85%;"/><button id="sendMsgBtn" class="btn-danger" style="margin-left: 2%; width: 13%; border-radius: 4px;">Send</button></div>
+        </div>
+    </div>
+
+    
+
+    <script src="/sweetalert2/sweetalert2.all.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io.connect()
+
+        let contentEle = document.querySelector(".content")
+        let memberEle = document.querySelector(".member")
+        let msgEle = document.querySelector("#msg")
+        let sendMsgBtn = document.querySelector("#sendMsgBtn")
+        
+        sendMsgBtn.addEventListener('click', e => {
+            if (msgEle.value) {
+                socket.emit('sendMsg', msgEle.value)
+                msgEle.value = ''
+            }
+        })
+
+        socket.on('getMsg', result => {
+            let lastContent = contentEle.innerHTML
+            contentEle.innerHTML = (lastContent ? lastContent + "<br>" : "") + result
+        })
+        socket.on('getOnlineUser', result => {
+            document.querySelector(".member").innerHTML = result
+        })
+
+        
+
+
+        // Change Username
+        Swal.fire({
+            title: 'Type your name',
+            input: 'text',
+            inputAttributes: { autocapitalize: 'off', maxlength: 10 },
+            showCancelButton: true,
+            confirmButtonText: 'OK',
+            showLoaderOnConfirm: true,
+            preConfirm: (xxx) => { return {'xxx' : xxx} },
+            allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+            if (result.isConfirmed) {
+                /* $("#bookDate").prop('disabled', true);
+                $("#timeContent").prop('disabled', true);
+                $("#btn_confirm").prop('disabled', true);
+                $("#bookedContent").html("");
+                
+                */
+                socket.emit('changeUsername', result.value.xxx)
+            }
+            else {
+                socket.emit('changeUsername', "")
+               
+            }
+        })
+
+
+
+    </script>
+</body>
+</html>
