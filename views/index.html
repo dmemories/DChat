@@ -21,6 +21,10 @@
             background: #fff;
         }
         .username { font-weight: bold; }
+        .icon {
+            width: 70px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body style="background-color: #000;">
@@ -33,7 +37,10 @@
             <div class="col"><div class="member"></div></div>
         </div>
         <div class="row">
-            <div class="col-9" style="margin-top: 20px;"><input id="msg" style="width: 85%;"/><button id="sendMsgBtn" class="btn-danger" style="margin-left: 2%; width: 13%; border-radius: 4px;">Send</button></div>
+            <div class="col" style="margin-top: 4px;" id="emo"></div>
+        </div>
+        <div class="row">
+            <div class="col-9" style="margin-top: 4px;"><input id="msg" style="width: 85%;"/><button id="sendMsgBtn" class="btn-danger" style="margin-left: 2%; width: 13%; border-radius: 4px;">Send</button></div>
         </div>
     </div>
 
@@ -42,17 +49,33 @@
     <script src="/sweetalert2/sweetalert2.all.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        let contentEle = document.querySelector(".content")
+        let memberEle = document.querySelector(".member")
+        let emoEle = document.querySelector("#emo")
+        let msgEle = document.querySelector("#msg")
+        let sendMsgBtn = document.querySelector("#sendMsgBtn")
+
+
         var socket = io.connect()
-        var mySocketId = -1;
+        var mySocketId = -1
         socket.emit('initial', '')
         socket.on('getSocketId', sid => {
             if (mySocketId == -1) mySocketId = sid
         })
-
-        let contentEle = document.querySelector(".content")
-        let memberEle = document.querySelector(".member")
-        let msgEle = document.querySelector("#msg")
-        let sendMsgBtn = document.querySelector("#sendMsgBtn")
+        socket.on('getEmotion', emoArr => {
+            if (emoEle.innerHTML.length < 1) {
+                for (let i = 0; i < emoArr.length; i++) {
+                    let img = document.createElement('img')
+                    img.classList.add("icon")
+                    img.src = "/images/emotion/" + emoArr[i] + ".gif"
+                    img.addEventListener('click', e => {
+                        msgEle.focus()
+                        msgEle.innerHTML = msgEle.innerHTML + '/' + emoArr[i]
+                    })
+                    emoEle.appendChild(img)
+                }
+            }
+        })
         
         const sendMsg = (e) => {
             if (msgEle.value) {
@@ -70,7 +93,6 @@
         sendMsgBtn.addEventListener('click', sendMsg)
 
         socket.on('getMsg', (data) => {
-            console.log(data)
             let lastContent = contentEle.innerHTML
             contentEle.innerHTML = (lastContent ? lastContent + "<br>" : "") + data.msg
             contentEle.scrollTop = contentEle.scrollHeight;

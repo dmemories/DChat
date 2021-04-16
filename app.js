@@ -1,3 +1,6 @@
+// File System
+const fs = require('fs')
+
 // Express
 const express = require('express')
 const app = express()
@@ -22,6 +25,9 @@ app.get('/', (req, res) => {
 
 let lastMsgUser, lastMsgTime
 let onlineList = []
+let emoArr
+getEmotionNames()
+
 io.on('connection', (socket) => {
     // Initial
     socket.username = getUsername("Anonymous", socket)
@@ -29,9 +35,12 @@ io.on('connection', (socket) => {
     // Events
     socket.on('initial', x => {
         io.emit('getSocketId', socket.id)
+        io.emit('getEmotion', emoArr)
     })
 
     socket.on('sendMsg', msg => {
+        msg = getEmotionMsg(msg)
+
         let currTimeTxt = getCurrTimeTxt()
         if (lastMsgUser != socket.username || lastMsgTime != currTimeTxt) {
             io.emit('getMsg', {
@@ -93,6 +102,20 @@ function getRemoveArray(arr, whichVal) {
 function getCurrTimeTxt() {
     let curTime = new Date()
     return " (" + curTime.getHours() + ":" + curTime.getMinutes() + ")"
+}
+
+function getEmotionNames() {
+    fs.readdir('./public/images/emotion', (err, files) => {
+        emoArr = (files ? files.map(fileName => fileName.split('.')[0]) : [])
+    })
+}
+
+function getEmotionMsg(msg) {
+    console.log(emoArr)
+    emoArr.forEach(emoName => {
+        msg = msg.replace('/' + emoName, "<img src='/images/emotion/" + emoName + ".gif' class='icon'/>")    
+    })
+    return msg
 }
 
 server.listen(3000)
