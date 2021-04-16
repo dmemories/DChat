@@ -111,9 +111,16 @@ function getEmotionNames() {
 }
 
 function getEmotionMsg(msg) {
-    console.log(emoArr)
+    //console.log(emoArr)
     emoArr.forEach(emoName => {
-        msg = msg.replace('/' + emoName, "<img src='/images/emotion/" + emoName + ".gif' class='icon'/>")    
+        let searchStr = '/' + emoName
+        while (msg.indexOf(searchStr) > -1) {
+            msg = msg.replace(searchStr, "{{" + emoName + "}}")
+        }
+        searchStr = '{{' + emoName + '}}'
+        while (msg.indexOf(searchStr) > -1) {
+            msg = msg.replace(searchStr, "<img src='/images/emotion/" + emoName + ".gif' class='icon'/>")
+        }
     })
     return msg
 }

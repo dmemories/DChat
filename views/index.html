@@ -70,7 +70,7 @@
                     img.src = "/images/emotion/" + emoArr[i] + ".gif"
                     img.addEventListener('click', e => {
                         msgEle.focus()
-                        msgEle.innerHTML = msgEle.innerHTML + '/' + emoArr[i]
+                        msgEle.value = msgEle.value + '/' + emoArr[i]
                     })
                     emoEle.appendChild(img)
                 }
