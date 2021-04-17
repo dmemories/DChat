@@ -27,6 +27,7 @@ let lastMsgUser, lastMsgTime
 let onlineList = []
 let emoArr
 getEmotionNames()
+let typerArr = []
 
 io.on('connection', (socket) => {
     // Initial
@@ -69,8 +70,22 @@ io.on('connection', (socket) => {
         io.emit('getOnlineUser', getOnlineUserTxt())
     })
 
+    socket.on('setTyping', x => {
+        if (typerArr.indexOf(socket.username) < 0) {
+            typerArr.push(socket.username)
+            io.emit('getTyping', typerArr)
+        }
+    })
+    socket.on('delTyping', x => {
+        typerArr = getRemoveArray(typerArr, socket.username)
+        io.emit('getTyping', typerArr)
+    })
+
     // End
     socket.on('disconnect', msg => {
+        typerArr = getRemoveArray(typerArr, socket.username)
+        io.emit('getTyping', typerArr)
+        
         onlineList = getRemoveArray(onlineList, socket.username)
         io.emit('getOnlineUser', getOnlineUserTxt())
         io.emit('getMsg', {
